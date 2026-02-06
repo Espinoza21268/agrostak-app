@@ -13,8 +13,8 @@ class RolRead(BaseModel):
 
 class UsuarioCreate(BaseModel):
     id_rol: int = Field(..., gt=0)
-    nombres: Optional[str] = Field(none, max_length=100)
-    apellidos: Optional[str] = Field(none, max_length=100)
+    nombres: Optional[str] = Field(None, max_length=100)
+    apellidos: Optional[str] = Field(None, max_length=100)
     correo: EmailStr
     password: str = Field(..., min_length=8, max_length=64)
     area_trabajo: Optional[str] = Field(None, max_length=100)
