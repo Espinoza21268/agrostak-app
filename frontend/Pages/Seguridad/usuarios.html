@@ -190,11 +190,14 @@
 
       // Payload base (ajusta si tu backend usa nombres distintos)
       const payload = {
+        id_rol: id_rol.value,
+        nombres: (nombre.value || "").trim() || null,
+        apellidos: "",
         correo: correo.value.trim(),
         usuario: (usuario.value || "").trim() || null,
-        nombre: (nombre.value || "").trim() || null,
-        id_rol: id_rol.value,
-        estado: estado.value
+        estado: estado.value,
+        password: (password.value || "").trim(),
+        area_trabajo:""
       };
 
       // Solo envía password si está lleno
