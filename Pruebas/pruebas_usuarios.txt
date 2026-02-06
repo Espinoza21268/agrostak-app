@@ -1,0 +1,38 @@
+Generar el usuario
+POST
+http://127.0.0.1:8000/identity/bootstrap/admin
+body
+
+{
+  "id_rol": 1,
+  "nombres": "Admin",
+  "apellidos": "Principal",
+  "correo": "admin@florcanela.com",
+  "password": "Admin1234",
+  "area_trabajo": "Administración",
+  "foto_url": null
+}
+
+
+////////////////////LOGIN///////////////// Generar token
+POST
+http://127.0.0.1:8000/identity/login
+body
+{
+  "correo": "admin@florcanela.com",
+  "password": "Admin1234"
+}
+
+/////////////////////USUARIO ACTUAL //////////////////////
+GET
+http://127.0.0.1:8000/identity/me
+{
+  "id_usuario": 1,
+  "id_rol": 1,
+  "nombres": "Admin",
+  "apellidos": "Principal",
+  "correo": "admin@florcanela.com",
+  "area_trabajo": "Administración",
+  "foto_url": null,
+  "estado": "activo"
+}

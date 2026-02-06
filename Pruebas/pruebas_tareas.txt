@@ -1,0 +1,43 @@
+#Tomar en cuenta que todos los endpoints estan validados por token por lo que es necesario generar el token para poder acceder
+
+#END POINTS
+GET /tasks
+POST /tasks
+GET /tasks/{id}
+PUT /tasks/{id}
+DELETE /tasks/{id}
+POST /tasks/{id}/assign
+GET /tasks/{id}/assign
+POST /tasks/{id}/comments
+GET /tasks/{id}/comments
+
+#CREAR TAREA
+POST /tasks
+{
+  "id_tarea_padre": null,
+  "titulo": "Riego del cultivo",
+  "descripcion": "Realizar riego en el sector A",
+  "fecha_inicio_prog": "2026-01-17T08:00:00",
+  "fecha_fin_prog": "2026-01-17T10:00:00",
+  "prioridad": "media",
+  "es_recurrente": false
+}
+
+#ACTUALIZAR TAREA
+PUT /tasks/1
+{
+  "porcentaje_avance": 50,
+  "estado": "en_progreso"
+}
+
+#ASIGNAR USUARIO 
+POST /tasks/1/assign
+{
+  "id_usuario": 2
+}
+
+#AGREGAR COMENTARIO
+POST /tasks/1/comments
+{
+  "texto": "Se inició el riego a las 08:10."
+}
