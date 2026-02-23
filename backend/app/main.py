@@ -8,6 +8,7 @@ from app.identity.infra.models import RolORM, UsuarioORM, AccesoUsuarioORM
 from app.tasks.api.router import router as tasks_router
 from app.tasks.infra.models import TareaORM, AsignacionTareaORM, HistorialEstadoTareaORM, ComentarioTareaORM
 from fastapi.middleware.cors import CORSMiddleware
+from app.reports.api.router import router as reports_router
 
 
 app = FastAPI(title="API Flor de Canela - Recursos")
@@ -40,3 +41,4 @@ app.add_middleware(
 app.include_router(recursos_router)
 app.include_router(identity_router)
 app.include_router(tasks_router)
+app.include_router(reports_router)
