@@ -230,6 +230,29 @@
 
   document.getElementById("btnVolver").addEventListener("click", () => window.location.href = "./listarRecursos.html");
 
+  function aplicarReglaUnidad() {
+    const esHerramienta = (tipo.value || "").toLowerCase() === "herramienta";
+
+    if (esHerramienta) {
+      // limpiar
+      unidad.value = "";
+
+      // bloquear
+      unidad.disabled = true;
+
+      // opcional: evitar validación
+      unidad.required = false;
+    } else {
+      // habilitar
+      unidad.disabled = false;
+
+      // opcional: si tu flujo lo requiere
+      unidad.required = true;
+    }
+  }
+
+  tipo.addEventListener("change", aplicarReglaUnidad);
+
   async function cargarEdicion(){
     if(!id) return;
     try{

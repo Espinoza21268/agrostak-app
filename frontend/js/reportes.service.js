@@ -1,5 +1,6 @@
 function epReportes(){ return window.APP_CONFIG.ENDPOINTS.REPORTES; }
 function epGenerar(){ return window.APP_CONFIG.ENDPOINTS.REPORTES_GENERAR; }
+function epDashboardSummary(){return window.APP_CONFIG.ENDPOINTS.DASHBOARD_SUMMARY;}
 
 async function reportesList(){
   return apiRequest(epReportes(), { method: "GET", auth: true });
@@ -19,4 +20,8 @@ async function reportesGetDashboard(){
  */
 async function reportesGenerar(payload){
   return apiRequest(epGenerar(), { method: "POST", body: payload, auth: true });
+}
+
+async function dashboardSummaryGet(){
+  return apiRequest(epDashboardSummary(), { method: "GET", auth: true });
 }
