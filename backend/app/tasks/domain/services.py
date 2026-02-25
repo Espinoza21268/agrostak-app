@@ -12,6 +12,7 @@ from app.tasks.domain.schemas import (
 from app.tasks.infra.repository import TasksRepository
 from app.tasks.infra.models import TareaORM, AsignacionTareaORM, HistorialEstadoTareaORM, ComentarioTareaORM
 from app.tasks.domain.enums import EstadoTarea
+from app.notifications.infra.onesignal_client import send_task_assigned_push
 
 
 def crear_tarea(db: Session, data: TareaCreate, id_creador: int) -> TareaRead:
@@ -155,6 +156,9 @@ def asignar_usuario(db: Session, id_tarea: int, data: AsignacionCreate, id_usuar
         )
         created = repo.add_asignacion(asignacion)
 
+    # luego de asignar en BD...
+    send_task_assigned_push(data.id_usuario, tarea.titulo, tarea.id_tarea)
+    
     # historial (opcional)
     repo.add_historial(HistorialEstadoTareaORM(
         id_tarea=id_tarea,
