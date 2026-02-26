@@ -75,17 +75,25 @@
   const passwordInput = document.getElementById("password");
   const togglePassword = document.getElementById("togglePassword");
 
+  /* ==============================
+     INICIALIZAR ONESIGNAL
+  ============================== */
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
       appId: "dc9072ed-f3d4-4fd3-8051-623f4f3a2a09",
-      allowLocalhostAsSecureOrigin: true
+      allowLocalhostAsSecureOrigin: false,
+      notifyButton: { enable: false },
     });
+
+    console.log("OneSignal inicializado");
   });
 
+  /* ==============================
+     TOGGLE PASSWORD
+  ============================== */
   togglePassword.addEventListener("click", () => {
     const isHidden = passwordInput.type === "password";
-
     passwordInput.type = isHidden ? "text" : "password";
     togglePassword.classList.toggle("fa-eye");
     togglePassword.classList.toggle("fa-eye-slash");
@@ -107,22 +115,42 @@
     btnLogin.textContent = isLoading ? "Ingresando..." : "Ingresar";
   }
 
+  /* ==============================
+     VINCULAR USUARIO A ONESIGNAL
+  ============================== */
   async function linkOneSignalUser(idUsuario) {
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      OneSignalDeferred.push(async function(OneSignal) {
-        // pedir permiso (solo la primera vez)
-        const perm = await OneSignal.Notifications.requestPermission();
-        if (perm !== "granted") return;
+    const OneSignal = window.OneSignal;
 
-        // external_user_id = idUsuario
-        await OneSignal.login(String(idUsuario));
-      });
+    // Verificar permiso actual
+    let permission = await OneSignal.Notifications.permission;
+
+    // Pedir permiso SOLO si no está concedido
+    if (permission !== "granted") {
+      permission = await OneSignal.Notifications.requestPermission();
     }
+
+    if (permission === "granted") {
+      // Vincular external_user_id
+      await OneSignal.login(String(idUsuario));
+
+      // Forzar opt-in (seguro)
+      if (OneSignal.User?.PushSubscription?.optIn) {
+        await OneSignal.User.PushSubscription.optIn();
+      }
+
+      console.log("OneSignal vinculado a usuario:", idUsuario);
+    } else {
+      console.log("⚠ Usuario no aceptó notificaciones");
+    }
+  }
 
   async function identityMe(){
     return apiRequest("/identity/me", { method: "GET", auth: true });
   }
 
+  /* ==============================
+     LOGIN
+  ============================== */
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     hideAlert();
@@ -134,14 +162,16 @@
     try {
       await loginRequest(correo, password);
 
-      // obtener usuario actual (id_usuario)
+      // Obtener usuario actual
       const me = await identityMe();
       const idUsuario = me?.id_usuario ?? me?.data?.id_usuario;
 
-      if (idUsuario) await linkOneSignalUser(idUsuario);
+      if (idUsuario) {
+        await linkOneSignalUser(idUsuario);
+      }
 
-      // Ajusta a tu ruta real
       window.location.href = "Pages/bienvenida_dos.html";
+
     } catch (err) {
       showAlert(err.message || "Error al iniciar sesión");
     } finally {
@@ -149,6 +179,5 @@
     }
   });
 </script>
-
 </body>
 </html>
