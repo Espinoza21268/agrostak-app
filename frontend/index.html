@@ -112,10 +112,9 @@
       await OneSignal.init({
         appId: "dc9072ed-f3d4-4fd3-8051-623f4f3a2a09",
         notifyButton: { enable: false },
-
-        // Importante para Netlify/root:
         serviceWorkerParam: { scope: "/" },
         serviceWorkerPath: "/OneSignalSDKWorker.js",
+        serviceWorkerUpdaterPath: "/OneSignalSDKUpdaterWorker.js",
       });
 
       osInited = true;
