@@ -27,4 +27,6 @@ def send_task_assigned_push(id_usuario: int, titulo_tarea: str, id_tarea: int):
     r = requests.post(url, json=payload, headers=headers, timeout=15)
     r.raise_for_status()
     print("pudo enviar notificacion")
+    print("STATUS",r.status_code)
+    print("RESPONSE",r.text)
     return r.json()
