@@ -88,7 +88,7 @@
 
     console.log("Permission:", OneSignal.Notifications.permission);
     console.log("PushSubscription.id:", OneSignal.User?.PushSubscription?.id ?? null);
-    console.log("Aliases:", await OneSignal.User.getAliases());
+    console.log("External ID (si existe):", OneSignal.User?.externalId ?? null);
 
     console.log("OneSignal inicializado");
   });
