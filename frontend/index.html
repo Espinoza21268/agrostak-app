@@ -75,24 +75,7 @@
   const passwordInput = document.getElementById("password");
   const togglePassword = document.getElementById("togglePassword");
 
-  // ====== 1) INIT ONESIGNAL + PROMESA PARA SABER CUÁNDO ESTÁ LISTO ======
-  let oneSignalReadyResolve;
-  const oneSignalReady = new Promise((res) => (oneSignalReadyResolve = res));
-
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function (OneSignal) {
-    await OneSignal.init({
-      appId: "dc9072ed-f3d4-4fd3-8051-623f4f3a2a09",
-      notifyButton: { enable: false },
-      // si estás en localhost, ponlo en true
-      allowLocalhostAsSecureOrigin: false,
-    });
-
-    console.log("✅ OneSignal inicializado");
-    oneSignalReadyResolve();
-  });
-
-  // ====== TOGGLE PASSWORD ======
+  // ---------- UI helpers ----------
   togglePassword.addEventListener("click", () => {
     const isHidden = passwordInput.type === "password";
     passwordInput.type = isHidden ? "text" : "password";
@@ -105,12 +88,10 @@
     alertBox.textContent = message;
     alertBox.classList.remove("d-none");
   }
-
   function hideAlert() {
     alertBox.classList.add("d-none");
     alertBox.textContent = "";
   }
-
   function setLoading(isLoading) {
     btnLogin.disabled = isLoading;
     btnLogin.textContent = isLoading ? "Ingresando..." : "Ingresar";
@@ -120,7 +101,71 @@
     return apiRequest("/identity/me", { method: "GET", auth: true });
   }
 
-  // ====== 2) LOGIN ======
+  // ---------- OneSignal init (NO debe bloquear el login) ----------
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+
+  let osInited = false;
+  let osInitError = null;
+
+  OneSignalDeferred.push(async function (OneSignal) {
+    try {
+      await OneSignal.init({
+        appId: "dc9072ed-f3d4-4fd3-8051-623f4f3a2a09",
+        notifyButton: { enable: false },
+
+        // Importante para Netlify/root:
+        serviceWorkerParam: { scope: "/" },
+        serviceWorkerPath: "/OneSignalSDKWorker.js",
+      });
+
+      osInited = true;
+      console.log("✅ OneSignal init OK");
+    } catch (e) {
+      osInitError = e;
+      console.warn("⚠ OneSignal init falló (no bloquea login):", e);
+    }
+  });
+
+  // ---------- Vincular usuario (best effort, jamás bloquea) ----------
+  async function linkOneSignalUserBestEffort(idUsuario) {
+    try {
+      // 1) Permiso: debe ser gesto de usuario -> lo llamamos desde submit
+      let permission = Notification.permission;
+      if (permission === "default") {
+        permission = await Notification.requestPermission();
+      }
+      if (permission !== "granted") {
+        console.log("⚠ Notificaciones no permitidas:", permission);
+        return;
+      }
+
+      // 2) Esperar un poquito a init, pero con timeout (NO cuelga)
+      const start = Date.now();
+      while (!osInited && !osInitError && (Date.now() - start) < 1200) {
+        await new Promise(r => setTimeout(r, 50));
+      }
+
+      if (!osInited) {
+        console.warn("⚠ OneSignal no listo (timeout/init error). Se sigue normal.");
+        return;
+      }
+
+      // 3) Login OneSignal (external_user_id)
+      OneSignalDeferred.push(async function (OneSignal) {
+        await OneSignal.login(String(idUsuario));
+        if (OneSignal.User?.PushSubscription?.optIn) {
+          await OneSignal.User.PushSubscription.optIn();
+        }
+        console.log("✅ OneSignal vinculado:", idUsuario);
+        console.log("✅ PushSubscription.id:", OneSignal.User?.PushSubscription?.id ?? null);
+      });
+
+    } catch (e) {
+      console.warn("⚠ OneSignal link falló (no bloquea):", e);
+    }
+  }
+
+  // ---------- LOGIN ----------
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     hideAlert();
@@ -129,48 +174,26 @@
     const correo = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value;
 
-    // ✅ CLAVE: pedir permiso INMEDIATAMENTE (acción del usuario)
-    // Esto es lo que hace que aparezca el popup.
-    let permission = Notification.permission;
-    if (permission === "default") {
-      permission = await Notification.requestPermission();
-    }
-
     try {
+      // 1) Login backend
       await loginRequest(correo, password);
 
+      // 2) Obtener usuario
       const me = await identityMe();
       const idUsuario = me?.id_usuario ?? me?.data?.id_usuario;
 
       if (idUsuario) {
-        localStorage.setItem("id_usuario", String(idUsuario)); // útil para otras páginas
+        localStorage.setItem("id_usuario", String(idUsuario));
 
-        // Esperar a que OneSignal esté listo
-        await oneSignalReady;
-
-        // Vincular usuario en OneSignal + optIn (si permiso concedido)
-        if (permission === "granted") {
-          OneSignalDeferred.push(async function (OneSignal) {
-            await OneSignal.login(String(idUsuario));
-
-            if (OneSignal.User?.PushSubscription?.optIn) {
-              await OneSignal.User.PushSubscription.optIn();
-            }
-
-            console.log("✅ OneSignal.login OK. idUsuario:", idUsuario);
-            console.log("✅ PushSubscription.id:", OneSignal.User?.PushSubscription?.id ?? null);
-          });
-
-          // espera cortita para que registre antes de redirigir
-          await new Promise(r => setTimeout(r, 600));
-        } else {
-          console.log("⚠ Notificaciones no permitidas (permission):", permission);
-        }
+        // 3) OneSignal: intentar vincular (NO await para no bloquear)
+        linkOneSignalUserBestEffort(idUsuario);
       }
 
+      // 4) SIEMPRE redirigir
       window.location.href = "Pages/bienvenida_dos.html";
+
     } catch (err) {
-      showAlert(err.message || "Error al iniciar sesión");
+      showAlert(err?.message || "Error al iniciar sesión");
     } finally {
       setLoading(false);
     }
