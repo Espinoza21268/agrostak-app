@@ -85,7 +85,9 @@
       allowLocalhostAsSecureOrigin: false,
       notifyButton: { enable: false },
     });
-
+    console.log("Permission:", await OneSignal.Notifications.permission);
+    console.log("Subscription ID:", await OneSignal.User.PushSubscription.getId());
+    console.log("Aliases:", await OneSignal.User.getAliases());
     console.log("OneSignal inicializado");
   });
 
