@@ -96,16 +96,63 @@
     const grid = document.getElementById("menuGrid");
     const emptyState = document.getElementById("emptyState");
 
+    //Bloque onesignal
     window.OneSignalDeferred = window.OneSignalDeferred || [];
+
     OneSignalDeferred.push(async function (OneSignal) {
+    
       await OneSignal.init({
         appId: "dc9072ed-f3d4-4fd3-8051-623f4f3a2a09",
         notifyButton: { enable: false },
-        allowLocalhostAsSecureOrigin: false,
+        serviceWorkerParam: { scope: "/" },
+        serviceWorkerPath: "/OneSignalSDKWorker.js",
+        serviceWorkerUpdaterPath: "/OneSignalSDKUpdaterWorker.js",
       });
-  
-      console.log("✅ OneSignal en bienvenida. Sub:", OneSignal.User?.PushSubscription?.id ?? null);
+    
+      console.log("OneSignal init OK");
+    
+      // 1️⃣ Pedir permiso si aún no existe
+      if (OneSignal.Notifications.permission !== "granted") {
+        await OneSignal.Notifications.requestPermission();
+      }
+    
+      if (OneSignal.Notifications.permission !== "granted") {
+        console.log("Usuario no permitió notificaciones");
+        return;
+      }
+    
+      // 2️⃣ Forzar suscripción
+      if (OneSignal.User?.PushSubscription?.optIn) {
+        await OneSignal.User.PushSubscription.optIn();
+      }
+    
+      // 3️⃣ Esperar que exista subscription REAL
+      let subId = null;
+      for (let i = 0; i < 20; i++) {
+        subId = OneSignal.User?.PushSubscription?.id ?? null;
+        if (subId) break;
+        await new Promise(r => setTimeout(r, 500));
+      }
+    
+      console.log("SubId:", subId);
+    
+      if (!subId) {
+        console.log("No hay SubId todavía");
+        return;
+      }
+    
+      // 4️⃣ AHORA sí vincular usuario
+      const idUsuario = localStorage.getItem("id_usuario");
+      if (!idUsuario) {
+        console.log("No hay id_usuario");
+        return;
+      }
+    
+      await OneSignal.login(String(idUsuario));
+      console.log("External ID vinculado:", idUsuario);
+    
     });
+    //FIN bloque signal
 
     function iconEmoji(icon){
       // puedes cambiar a fontawesome luego; por ahora algo simple
