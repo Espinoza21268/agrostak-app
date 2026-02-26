@@ -79,15 +79,17 @@
      INICIALIZAR ONESIGNAL
   ============================== */
   window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
+  OneSignalDeferred.push(async function (OneSignal) {
     await OneSignal.init({
       appId: "dc9072ed-f3d4-4fd3-8051-623f4f3a2a09",
-      allowLocalhostAsSecureOrigin: false,
       notifyButton: { enable: false },
+      allowLocalhostAsSecureOrigin: false,
     });
-    console.log("Permission:", await OneSignal.Notifications.permission);
-    console.log("Subscription ID:", await OneSignal.User.PushSubscription.getId());
+
+    console.log("Permission:", OneSignal.Notifications.permission);
+    console.log("PushSubscription.id:", OneSignal.User?.PushSubscription?.id ?? null);
     console.log("Aliases:", await OneSignal.User.getAliases());
+
     console.log("OneSignal inicializado");
   });
 
@@ -121,29 +123,28 @@
      VINCULAR USUARIO A ONESIGNAL
   ============================== */
   async function linkOneSignalUser(idUsuario) {
-    const OneSignal = window.OneSignal;
-
-    // Verificar permiso actual
-    let permission = await OneSignal.Notifications.permission;
-
-    // Pedir permiso SOLO si no está concedido
-    if (permission !== "granted") {
-      permission = await OneSignal.Notifications.requestPermission();
-    }
-
-    if (permission === "granted") {
-      // Vincular external_user_id
-      await OneSignal.login(String(idUsuario));
-
-      // Forzar opt-in (seguro)
-      if (OneSignal.User?.PushSubscription?.optIn) {
-        await OneSignal.User.PushSubscription.optIn();
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function (OneSignal) {
+  
+      let permission = OneSignal.Notifications.permission;
+  
+      if (permission !== "granted") {
+        permission = await OneSignal.Notifications.requestPermission();
       }
-
-      console.log("OneSignal vinculado a usuario:", idUsuario);
-    } else {
-      console.log("⚠ Usuario no aceptó notificaciones");
-    }
+  
+      if (permission === "granted") {
+        await OneSignal.login(String(idUsuario));
+  
+        if (OneSignal.User?.PushSubscription?.optIn) {
+          await OneSignal.User.PushSubscription.optIn();
+        }
+  
+        console.log("OneSignal vinculado a usuario:", idUsuario);
+        console.log("PushSubscription.id:", OneSignal.User?.PushSubscription?.id ?? null);
+      } else {
+        console.log("⚠ Usuario no aceptó notificaciones");
+      }
+    });
   }
 
   async function identityMe(){
