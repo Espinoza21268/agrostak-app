@@ -75,27 +75,24 @@
   const passwordInput = document.getElementById("password");
   const togglePassword = document.getElementById("togglePassword");
 
-  /* ==============================
-     INICIALIZAR ONESIGNAL
-  ============================== */
+  // ====== 1) INIT ONESIGNAL + PROMESA PARA SABER CUÁNDO ESTÁ LISTO ======
+  let oneSignalReadyResolve;
+  const oneSignalReady = new Promise((res) => (oneSignalReadyResolve = res));
+
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function (OneSignal) {
     await OneSignal.init({
       appId: "dc9072ed-f3d4-4fd3-8051-623f4f3a2a09",
       notifyButton: { enable: false },
+      // si estás en localhost, ponlo en true
       allowLocalhostAsSecureOrigin: false,
     });
 
-    console.log("Permission:", OneSignal.Notifications.permission);
-    console.log("PushSubscription.id:", OneSignal.User?.PushSubscription?.id ?? null);
-    console.log("External ID (si existe):", OneSignal.User?.externalId ?? null);
-
-    console.log("OneSignal inicializado");
+    console.log("✅ OneSignal inicializado");
+    oneSignalReadyResolve();
   });
 
-  /* ==============================
-     TOGGLE PASSWORD
-  ============================== */
+  // ====== TOGGLE PASSWORD ======
   togglePassword.addEventListener("click", () => {
     const isHidden = passwordInput.type === "password";
     passwordInput.type = isHidden ? "text" : "password";
@@ -119,41 +116,11 @@
     btnLogin.textContent = isLoading ? "Ingresando..." : "Ingresar";
   }
 
-  /* ==============================
-     VINCULAR USUARIO A ONESIGNAL
-  ============================== */
-  async function linkOneSignalUser(idUsuario) {
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function (OneSignal) {
-  
-      let permission = OneSignal.Notifications.permission;
-  
-      if (permission !== "granted") {
-        permission = await OneSignal.Notifications.requestPermission();
-      }
-  
-      if (permission === "granted") {
-        await OneSignal.login(String(idUsuario));
-  
-        if (OneSignal.User?.PushSubscription?.optIn) {
-          await OneSignal.User.PushSubscription.optIn();
-        }
-  
-        console.log("OneSignal vinculado a usuario:", idUsuario);
-        console.log("PushSubscription.id:", OneSignal.User?.PushSubscription?.id ?? null);
-      } else {
-        console.log("⚠ Usuario no aceptó notificaciones");
-      }
-    });
-  }
-
-  async function identityMe(){
+  async function identityMe() {
     return apiRequest("/identity/me", { method: "GET", auth: true });
   }
 
-  /* ==============================
-     LOGIN
-  ============================== */
+  // ====== 2) LOGIN ======
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     hideAlert();
@@ -162,19 +129,46 @@
     const correo = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value;
 
+    // ✅ CLAVE: pedir permiso INMEDIATAMENTE (acción del usuario)
+    // Esto es lo que hace que aparezca el popup.
+    let permission = Notification.permission;
+    if (permission === "default") {
+      permission = await Notification.requestPermission();
+    }
+
     try {
       await loginRequest(correo, password);
 
-      // Obtener usuario actual
       const me = await identityMe();
       const idUsuario = me?.id_usuario ?? me?.data?.id_usuario;
 
       if (idUsuario) {
-        await linkOneSignalUser(idUsuario);
+        localStorage.setItem("id_usuario", String(idUsuario)); // útil para otras páginas
+
+        // Esperar a que OneSignal esté listo
+        await oneSignalReady;
+
+        // Vincular usuario en OneSignal + optIn (si permiso concedido)
+        if (permission === "granted") {
+          OneSignalDeferred.push(async function (OneSignal) {
+            await OneSignal.login(String(idUsuario));
+
+            if (OneSignal.User?.PushSubscription?.optIn) {
+              await OneSignal.User.PushSubscription.optIn();
+            }
+
+            console.log("✅ OneSignal.login OK. idUsuario:", idUsuario);
+            console.log("✅ PushSubscription.id:", OneSignal.User?.PushSubscription?.id ?? null);
+          });
+
+          // espera cortita para que registre antes de redirigir
+          await new Promise(r => setTimeout(r, 600));
+        } else {
+          console.log("⚠ Notificaciones no permitidas (permission):", permission);
+        }
       }
 
       window.location.href = "Pages/bienvenida_dos.html";
-
     } catch (err) {
       showAlert(err.message || "Error al iniciar sesión");
     } finally {
