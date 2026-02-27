@@ -182,10 +182,11 @@
       const idUsuario = me?.id_usuario ?? me?.data?.id_usuario;
 
       if (idUsuario) {
+        console.log("usuario logeado",idUsuario)
         localStorage.setItem("id_usuario", String(idUsuario));
 
         // 3) OneSignal: intentar vincular (NO await para no bloquear)
-        linkOneSignalUserBestEffort(idUsuario);
+        await linkOneSignalUserBestEffort(idUsuario);
       }
 
       // 4) SIEMPRE redirigir
