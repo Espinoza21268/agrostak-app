@@ -104,17 +104,19 @@
       await OneSignal.init({
         appId: "dc9072ed-f3d4-4fd3-8051-623f4f3a2a09",
         notifyButton: { enable: false },
-        serviceWorkerParam: { scope: "/" },
-        serviceWorkerPath: "../OneSignalSDKWorker.js",
-        serviceWorkerUpdaterPath: "../OneSignalSDKUpdaterWorker.js",
+        serviceWorkerParam: { scope: "../" },
+        serviceWorkerPath: "/OneSignalSDKWorker.js",
+        serviceWorkerUpdaterPath: "/OneSignalSDKUpdaterWorker.js",
       });
     
       console.log("OneSignal init OK");
     
       // 1️⃣ Pedir permiso si aún no existe
+      console.log("Primero",OneSignal.Notifications.permission);
       if (OneSignal.Notifications.permission !== "granted") {
         await OneSignal.Notifications.requestPermission();
       }
+      console.log("Segundo",OneSignal.Notifications.permission);
     
       if (OneSignal.Notifications.permission !== "granted") {
         console.log("Usuario no permitió notificaciones");
