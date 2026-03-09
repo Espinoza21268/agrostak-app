@@ -25,7 +25,8 @@ def crear_tarea(db: Session, data: TareaCreate, id_creador: int) -> TareaRead:
 
     if data.fecha_inicio_prog and data.fecha_fin_prog and data.fecha_inicio_prog > data.fecha_fin_prog:
         raise HTTPException(status_code=400, detail="fecha_inicio_prog no puede ser mayor que fecha_fin_prog.")
-
+    print("=======================================>>>>>")
+    print(data)
     tarea = TareaORM(
         id_tarea_padre=data.id_tarea_padre,
         id_creador=id_creador,
@@ -71,7 +72,8 @@ def listar_tareas(db: Session) -> list[TareaRead]:
             "prioridad": tarea.prioridad,
             "porcentaje_avance": tarea.porcentaje_avance,
             "asignado_a": asignado,
-            "fecha_fin_real": tarea.fecha_fin_real
+            "fecha_fin_real": tarea.fecha_fin_real,
+            "descripcion": tarea.descripcion
         })
 
     return resultado
