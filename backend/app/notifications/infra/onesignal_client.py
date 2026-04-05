@@ -16,7 +16,7 @@ def send_task_assigned_push(id_usuario: int, titulo_tarea: str, id_tarea: int):
         "headings": {"en": "Nueva tarea asignada", "es": "Nueva tarea asignada"},
         "data": {"id_tarea": id_tarea, "tipo": "tarea_asignada"},
         # opcional: URL a la que abre al hacer click
-        "url": f"https://TU_FRONTEND_NETLIFY_URL/#/tareas/{id_tarea}"
+        "url": f"https://agrostak.netlify.app/pages/tareas/listartareas"
     }
     print("pudo generar el mrensae")
     headers = {
