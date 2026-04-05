@@ -52,6 +52,7 @@ def enviarNotificacion(db: Session,estado: str, id_recurso: int):
     repoIdentity = IdentityRepository(db)
     id_usuario = repoIdentity.get_user_admin().id_usuario
     send_resource_status_push(id_usuario, estado, id_recurso)
+    return True
 
 def obtener_alertas_resumen(db: Session) -> RecursoAlertasResumen:
     repo = RecursoRepository(db)
