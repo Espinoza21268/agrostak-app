@@ -11,7 +11,8 @@ window.APP_CONFIG = {
     TAREAS: "/tareas",
     REPORTES: "/reports",
     REPORTES_GENERAR: "/reportes/generar",
-    DASHBOARD_SUMMARY: "/reports/dashboard"
+    DASHBOARD_SUMMARY: "/reports/dashboard",
+    RECURSOS_ALERTAS: "/recursos/alertas/resumen",
   },
   STORAGE: {
     TOKEN_KEY: "omar_access_token",
