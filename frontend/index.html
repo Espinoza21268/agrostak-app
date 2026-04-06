@@ -183,6 +183,7 @@
 
       if (idUsuario) {
         console.log("usuario logeado",idUsuario)
+        console.log("usuario a asignar", idUsuario)
         localStorage.setItem("id_usuario", String(idUsuario));
 
         // 3) OneSignal: intentar vincular (NO await para no bloquear)
