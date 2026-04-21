@@ -37,6 +37,7 @@ class TasksRepository:
             .filter(
                 ((AsignacionTareaORM.activo == 1) | (AsignacionTareaORM.activo.is_(None))) & (TareaORM.estado != "eliminada")
             )
+            .order_by(desc(TareaORM.fecha_creacion))
             .all()
         )   
 
