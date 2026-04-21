@@ -122,5 +122,7 @@ class TasksRepository:
             .join(AsignacionTareaORM, AsignacionTareaORM.id_tarea == TareaORM.id_tarea)
             .filter(AsignacionTareaORM.id_usuario == id_usuario)
             .filter(AsignacionTareaORM.activo == 1)
+            .filter(TareaORM.estado != "eliminada")
+            .order_by(desc(TareaORM.fecha_creacion))
             .all()
         )
