@@ -33,7 +33,8 @@ class ReportsRepository:
                 case((
                     (TareaORM.fecha_fin_prog.isnot(None)) &
                     (TareaORM.fecha_fin_prog < now) &
-                    (TareaORM.estado != "eliminada"),
+                    (TareaORM.estado != "eliminada") &
+                    (TareaORM.estado != "completada"),
                     1
                 ), else_=0)
             ).label("vencidas"),
