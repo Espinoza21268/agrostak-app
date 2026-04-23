@@ -16,6 +16,9 @@ from app.tasks.domain.enums import EstadoTarea
 from app.notifications.infra.onesignal_client import send_task_assigned_push
 from app.resources.domain.schemas import RecursoUpdate
 
+from app.notifications.domain.schemas import NotificacionCreate
+from app.notifications.domain.services import guardar_notificacion
+
 
 def crear_tarea(db: Session, data: TareaCreate, id_creador: int) -> TareaRead:
     repo = TasksRepository(db)
@@ -174,6 +177,17 @@ def asignar_usuario(db: Session, id_tarea: int, data: AsignacionCreate, id_usuar
         id_usuario=id_usuario_actor,
         comentario=f"Asignación de usuario {data.id_usuario}"
     ))
+
+     # 2. guardar historial en BD
+    guardar_notificacion(
+        db,
+        NotificacionCreate(
+            id_usuario=data.id_usuario,
+            id_tarea=tarea.id_tarea,
+            tipo="tarea_asignada",
+            mensaje="Tarea asignada"
+        )
+    )
 
     return AsignacionRead.model_validate(created)
 
