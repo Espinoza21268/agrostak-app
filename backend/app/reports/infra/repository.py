@@ -28,12 +28,12 @@ class ReportsRepository:
             func.sum(case((TareaORM.estado == "pendiente", 1), else_=0)).label("pendientes"),
             func.sum(case((TareaORM.estado == "en_progreso", 1), else_=0)).label("en_progreso"),
             func.sum(case((TareaORM.estado == "completada", 1), else_=0)).label("completadas"),
-            func.sum(case((TareaORM.estado == "cancelada", 1), else_=0)).label("canceladas"),
+            func.sum(case((TareaORM.estado == "eliminada", 1), else_=0)).label("canceladas"),
             func.sum(
                 case((
                     (TareaORM.fecha_fin_prog.isnot(None)) &
                     (TareaORM.fecha_fin_prog < now) &
-                    (TareaORM.estado != "completada"),
+                    (TareaORM.estado != "eliminada"),
                     1
                 ), else_=0)
             ).label("vencidas"),
